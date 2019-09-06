@@ -2,38 +2,25 @@
 # uncomment to debug the script
 # set -x
 
-export DEVOPS_SIGNER=${DEVOPS_SIGNER:-"devops"}
-
-# create a devops key-pair for the given DEVOPS_SIGNER
+DEVOPS_SIGNER="$DEVOPS_BUILD_SIGNER"
+echo "Create  $DEVOPS_SIGNER singer key"
+export DOCKER_CONTENT_TRUST=1
 docker trust key generate "$DEVOPS_SIGNER"
+echo "Restoring keys from $VAULT_INSTANCE"
+VAULT_DATA=$(buildVaultAccessDetailsJSON "$VAULT_INSTANCE" "$IBMCLOUD_TARGET_REGION" "$IBMCLOUD_TARGET_RESOURCE_GROUP")
+#write repo pem file to trust/private. Only repo key required to add delegate
+JSON_DATA="$(readData "$REGISTRY_NAMESPACE.$IMAGE_NAME.keys" "$VAULT_DATA")"
+JSON_PUB_DATA="$(readData "$REGISTRY_NAMESPACE.$IMAGE_NAME.pub" "$VAULT_DATA")"
 
-docker trust inspect --pretty $GUN
+# save the new signer pem key to the Vault
+deleteSecret "$REGISTRY_NAMESPACE.$IMAGE_NAME.keys" "$VAULT_DATA"
+deleteSecret "$REGISTRY_NAMESPACE.$IMAGE_NAME.pub" "$VAULT_DATA"
 
-# If $ARCHIVE_DIR then create the tar file containing certificates/keys created during initialization
-# https://docs.docker.com/engine/security/trust/trust_key_mng/#back-up-your-keys , add public key
-# and specific information for DCT initialization
-if [[ "$ARCHIVE_DIR" ]]; then
-    mkdir -p $ARCHIVE_DIR
-    # keep the signer ids
-    docker trust inspect $GUN | jq -r --arg GUN "$GUN" --arg DEVOPS_SIGNER "$DEVOPS_SIGNER" '.[] | select(.name=$GUN) | .Signers' > $ARCHIVE_DIR/dct_signers.json
-    # keep the signed registry context
-    echo "GUN=$GUN" > $ARCHIVE_DIR/dct.properties
-    echo "REGISTRY_URL=${REGISTRY_URL}" >> $ARCHIVE_DIR/dct.properties
-    echo "REGISTRY_REGION=${REGISTRY_REGION}" >> $ARCHIVE_DIR/dct.properties
-    echo "REGISTRY_NAMESPACE=${REGISTRY_NAMESPACE}" >> $ARCHIVE_DIR/dct.properties
-    echo "IMAGE_NAME=${IMAGE_NAME}" >> $ARCHIVE_DIR/dct.properties
-    echo "DOCKER_CONTENT_TRUST_SERVER=$DOCKER_CONTENT_TRUST_SERVER" >> $ARCHIVE_DIR/dct.properties
-    # public key of signer are kept in archive as needed for CISE configuration for instance
-    cp *.pub $ARCHIVE_DIR
+JSON_DATA=$(addTrustFileToJSON "$DEVOPS_SIGNER" "$JSON_DATA" "$DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE")
+publicPem=$(base64TextEncode "./$DEVOPS_SIGNER.pub")
+data=$(addJSONEntry "$data" "name" "$DEVOPS_SIGNER.pub")
+data=$(addJSONEntry "$data" "value" "$publicPem")
+JSON_PUB_DATA=$(addJSONEntry "$JSON_PUB_DATA" "$DEVOPS_SIGNER" "$data")
 
-    # if no vault is configured, keep the passphrase and backup the keys in the archive
-    # https://docs.docker.com/engine/security/trust/trust_key_mng/#back-up-your-keys
-    if [ -z "$VAULT_INSTANCE" ]; then
-      echo "No Vault instance defined - backing-up the keys in $ARCHIVE_DIR directory"
-      echo "DOCKER_CONTENT_TRUST_ROOT_PASSPHRASE=$DOCKER_CONTENT_TRUST_ROOT_PASSPHRASE" >> $ARCHIVE_DIR/dct.properties
-      echo "DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE=$DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE" >> $ARCHIVE_DIR/dct.properties
-      umask 077; tar -zcvf $ARCHIVE_DIR/private_keys_backup.tar.gz --directory ~ .docker/trust/private; umask 022
-    else
-      echo "Vault instance $VAULT_INSTANCE defined - it would be used for the key backup"
-    fi
-fi
+saveData "$REGISTRY_NAMESPACE.$IMAGE_NAME.keys" "$VAULT_DATA" "$JSON_DATA"
+saveData "$REGISTRY_NAMESPACE.$IMAGE_NAME.pub" "$VAULT_DATA" "$JSON_PUB_DATA"
