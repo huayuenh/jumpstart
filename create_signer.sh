@@ -5,7 +5,6 @@ if [ -z "$DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE" ]; then
     export DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE=$(openssl rand -base64 16)
 fi
 
-DEVOPS_SIGNER="$DEVOPS_BUILD_SIGNER"
 echo "Create  $DEVOPS_SIGNER singer key"
 export DOCKER_CONTENT_TRUST=1
 docker trust key generate "$DEVOPS_SIGNER"
