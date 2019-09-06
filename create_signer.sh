@@ -10,19 +10,25 @@ export DOCKER_CONTENT_TRUST=1
 docker trust key generate "$DEVOPS_SIGNER"
 echo "Restoring keys from $VAULT_INSTANCE"
 VAULT_DATA=$(buildVaultAccessDetailsJSON "$VAULT_INSTANCE" "$IBMCLOUD_TARGET_REGION" "$IBMCLOUD_TARGET_RESOURCE_GROUP")
-#write repo pem file to trust/private. Only repo key required to add delegate
-JSON_DATA="$(readData "$REGISTRY_NAMESPACE.$IMAGE_NAME.keys" "$VAULT_DATA")"
-JSON_PUB_DATA="$(readData "$REGISTRY_NAMESPACE.$IMAGE_NAME.pub" "$VAULT_DATA")"
+#retrieve existing keys from Vault
+JSON_PRIV_DATA="$(readData "$REGISTRY_NAMESPACE.keys" "$VAULT_DATA")"
+JSON_PUB_DATA="$(readData "$REGISTRY_NAMESPACE.pub" "$VAULT_DATA")"
 
-# save the new signer pem key to the Vault
-deleteSecret "$REGISTRY_NAMESPACE.$IMAGE_NAME.keys" "$VAULT_DATA"
-deleteSecret "$REGISTRY_NAMESPACE.$IMAGE_NAME.pub" "$VAULT_DATA"
+# delete old keys to allow for update
+if [ "$JSON_PRIV_DATA" ]; then
+    deleteSecret "$REGISTRY_NAMESPACE.keys" "$VAULT_DATA"
+fi
+if [ "$JSON_PUB_DATA" ]; then
+    deleteSecret "$REGISTRY_NAMESPACE.pub" "$VAULT_DATA"
+fi
 
-JSON_DATA=$(addTrustFileToJSON "$DEVOPS_SIGNER" "$JSON_DATA" "$DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE")
-publicPem=$(base64TextEncode "./$DEVOPS_SIGNER.pub")
-data=$(addJSONEntry "$data" "name" "$DEVOPS_SIGNER.pub")
-data=$(addJSONEntry "$data" "value" "$publicPem")
-JSON_PUB_DATA=$(addJSONEntry "$JSON_PUB_DATA" "$DEVOPS_SIGNER" "$data")
+# add new keys to json
+JSON_PRIV_DATA=$(addTrustFileToJSON "$DEVOPS_SIGNER" "$JSON_PRIV_DATA" "$DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE")
+base64PublicPem=$(base64TextEncode "./$DEVOPS_SIGNER.pub")
+publicKeyEntry=$(addJSONEntry "$publicKeyEntry" "name" "$DEVOPS_SIGNER.pub")
+publicKeyEntry=$(addJSONEntry "$publicKeyEntry" "value" "$base64PublicPem")
+JSON_PUB_DATA=$(addJSONEntry "$JSON_PUB_DATA" "$DEVOPS_SIGNER" "$publicKeyEntry")
 
-saveData "$REGISTRY_NAMESPACE.$IMAGE_NAME.keys" "$VAULT_DATA" "$JSON_DATA"
-saveData "$REGISTRY_NAMESPACE.$IMAGE_NAME.pub" "$VAULT_DATA" "$JSON_PUB_DATA"
+#save public/private key pairs to the vault
+saveData "$REGISTRY_NAMESPACE.keys" "$VAULT_DATA" "$JSON_PRIV_DATA"
+saveData "$REGISTRY_NAMESPACE.pub" "$VAULT_DATA" "$JSON_PUB_DATA"
