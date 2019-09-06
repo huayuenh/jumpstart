@@ -1,6 +1,9 @@
 #!/bin/bash
 # uncomment to debug the script
 # set -x
+if [ -z "$DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE" ]; then
+    export DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE=$(openssl rand -base64 16)
+fi
 
 DEVOPS_SIGNER="$DEVOPS_BUILD_SIGNER"
 echo "Create  $DEVOPS_SIGNER singer key"
