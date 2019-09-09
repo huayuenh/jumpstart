@@ -104,17 +104,16 @@ function saveData {
     local VAULT_NAME=$(getJSONValue "name" "$VAULT_DATA")
     local VAULT_REGION=$(getJSONValue "region" "$VAULT_DATA")
     local VAULT_RESOURCE_GROUP=$(getJSONValue "resourcegroup" "$VAULT_DATA")
-     if [[ "$VAULT_NAME" && "$VAULT_REGION" && "$VAULT_RESOURCE_GROUP" && "$KEY" && "$JSON_DATA" ]]; then
-        SECRET_GUID=$(
-            save_secret \
-            "$VAULT_NAME" \
-            "$VAULT_REGION" \
-            "$VAULT_RESOURCE_GROUP" \
-            "$KEY" \
-            "$JSON_DATA" \
-        )
-        echo "SAVE SUCCESSFUL SECRET_GUID=${SECRET_GUID}"
-      fi
+    
+    SECRET_GUID=$(
+        save_secret \
+          "$VAULT_NAME" \
+          "$VAULT_REGION" \
+          "$VAULT_RESOURCE_GROUP" \
+          "$KEY" \
+          "$JSON_DATA" \
+      )
+      echo "SAVE SUCCESSFUL SECRET_GUID=${SECRET_GUID}"
   #  else
     #TODO use hashicorp
    # echo "Hashicorp"
