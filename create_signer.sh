@@ -18,7 +18,11 @@ JSON_PUB_DATA="$(readData "$REGISTRY_NAMESPACE.pub" "$VAULT_DATA")"
 
 echo "***************************"
 #check if entry exists
+echo "$JSON_PRIV_DATA"
+echo "***************"
 EXISTING_KEY="$(getJSONValue "$DEVOPS_SIGNER" "$JSON_PRIV_DATA")"
+echo "search for $DEVOPS_SIGNER"
+echo "$EXISTING_KEY"
 if [ "$EXISTING_KEY" ]; then
     echo "key found"
 else
