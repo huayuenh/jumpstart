@@ -106,6 +106,7 @@ function saveData {
     local VAULT_NAME=$(getJSONValue "name" "$VAULT_DATA")
     local VAULT_REGION=$(getJSONValue "region" "$VAULT_DATA")
     local VAULT_RESOURCE_GROUP=$(getJSONValue "resourcegroup" "$VAULT_DATA")
+    echo "test error location"
     if [[ "$VAULT_NAME" && "$VAULT_REGION" && "$VAULT_RESOURCE_GROUP" && "$KEY" && "$JSON_DATA" ]]; then
         SECRET_GUID=$(
             save_secret \
