@@ -143,23 +143,20 @@ function savePemFileToVault {
 #KEY -> the look up key for teh storage
 #VAULT_DATA the variable/json storing the required Vault details
 function readData {
-    echo "IN READ"
     local KEY=$1
     local VAULT_DATA=$2
     #if [$USE_KEY_PROTECT_VAULT -eq 1]; then
     local VAULT_NAME=$(getJSONValue "name" "$VAULT_DATA")
     local VAULT_REGION=$(getJSONValue "region" "$VAULT_DATA")
     local VAULT_RESOURCE_GROUP=$(getJSONValue "resourcegroup" "$VAULT_DATA")
-    if [[ "$VAULT_NAME" && "$VAULT_REGION" && "$VAULT_RESOURCE_GROUP" && "$KEY" ]]; then
-        PASSWORD_SECRET=$(
-            retrieve_secret \
-            "$VAULT_NAME" \
-            "$VAULT_REGION" \
-            "$VAULT_RESOURCE_GROUP"  \
-            "$KEY" \
-        )
-        echo "$PASSWORD_SECRET"
-    fi
+     PASSWORD_SECRET=$(
+        retrieve_secret \
+          "$VAULT_NAME" \
+          "$VAULT_REGION" \
+          "$VAULT_RESOURCE_GROUP"  \
+          "$KEY" \
+      )
+      echo "$PASSWORD_SECRET"
    # else
    #     echo "Hashicorp"
    # fi
@@ -232,21 +229,19 @@ function base64TextDecode {
 }
 
 function deleteSecret {
-    local KEY=$1
+    local vault_key=$1
     local VAULT_DATA=$2
     local VAULT_NAME=$(getJSONValue "name" "$VAULT_DATA")
     local VAULT_REGION=$(getJSONValue "region" "$VAULT_DATA")
     local VAULT_RESOURCE_GROUP=$(getJSONValue "resourcegroup" "$VAULT_DATA")
-    if [[ "$VAULT_NAME" && "$VAULT_REGION" && "$VAULT_RESOURCE_GROUP" && "$KEY" ]]; then
-        DELETE_SECRET_RESPONSE=$(
-            delete_secret \
-            "$VAULT_NAME" \
-            "$VAULT_REGION" \
-            "$VAULT_RESOURCE_GROUP" \
-            "$KEY"
-        )
-        echo "DELETE_SECRET_RESPONSE=${DELETE_SECRET_RESPONSE}"
-    fi
+    DELETE_SECRET_RESPONSE=$(
+        delete_secret \
+          "$VAULT_NAME" \
+          "$VAULT_REGION" \
+          "$VAULT_RESOURCE_GROUP" \
+          "$vault_key"
+      )
+      echo "DELETE_SECRET_RESPONSE=${DELETE_SECRET_RESPONSE}"
 }
 
 function deleteVault {
