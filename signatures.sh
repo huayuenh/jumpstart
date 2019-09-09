@@ -230,7 +230,6 @@ function base64TextDecode {
 }
 
 function deleteSecret {
-    echo "wrap delete"
     local KEY=$1
     local VAULT_DATA=$2
     local VAULT_NAME=$(getJSONValue "name" "$VAULT_DATA")

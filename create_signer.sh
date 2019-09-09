@@ -36,8 +36,6 @@ if [[ "$EXISTING_KEY" == "null" || -z "$EXISTING_KEY" ]]; then
     fi
 
     #save public/private key pairs to the vault
-    echo "start save updated payload"
-    echo "$JSON_PRIV_DATA"
     saveData "$REGISTRY_NAMESPACE.keys" "$VAULT_DATA" "$JSON_PRIV_DATA"
     saveData "$REGISTRY_NAMESPACE.pub" "$VAULT_DATA" "$JSON_PUB_DATA"
 else
