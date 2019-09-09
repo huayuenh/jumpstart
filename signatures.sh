@@ -40,7 +40,7 @@ function addJSONEntry {
     local KEY=$2
     local VALUE=$3
     if [[ "$KEY" && "$VALUE" ]]; then
-        echo $(jq --arg key "$KEY" --arg value "$VALUE" '.[$KEY] = $VALUE' <<<$JSON)
+        echo $(jq --arg key "$KEY" --arg value "$VALUE" '.[$key] = $value' <<<$JSON)
     else
         echo "$JSON"
     fi
