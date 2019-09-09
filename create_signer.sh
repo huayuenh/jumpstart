@@ -21,12 +21,13 @@ if [[ "$EXISTING_KEY" == "null" || -z "$EXISTING_KEY" ]]; then
     echo "Create  $DEVOPS_SIGNER singer key"
     docker trust key generate "$DEVOPS_SIGNER"
     # add new keys to json
+    echo "start check"
     JSON_PRIV_DATA=$(addTrustFileToJSON "$DEVOPS_SIGNER" "$JSON_PRIV_DATA" "$DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE")
     base64PublicPem=$(base64TextEncode "./$DEVOPS_SIGNER.pub")
     publicKeyEntry=$(addJSONEntry "$publicKeyEntry" "name" "$DEVOPS_SIGNER.pub")
     publicKeyEntry=$(addJSONEntry "$publicKeyEntry" "value" "$base64PublicPem")
     JSON_PUB_DATA=$(addJSONEntry "$JSON_PUB_DATA" "$DEVOPS_SIGNER" "$publicKeyEntry")
-
+    echo "end check"
     # delete old keys to allow for update
     if [ "$JSON_PRIV_DATA" ]; then
         deleteSecret "$REGISTRY_NAMESPACE.keys" "$VAULT_DATA"
