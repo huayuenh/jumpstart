@@ -26,8 +26,6 @@ function getJSONValue {
     local JSON=$2
     if [ "$JSON" ]; then
         echo $JSON| jq -r '.["'$KEY'"]'
-    else
-        echo "{}"
     fi
 }
 
@@ -108,16 +106,17 @@ function saveData {
     local VAULT_NAME=$(getJSONValue "name" "$VAULT_DATA")
     local VAULT_REGION=$(getJSONValue "region" "$VAULT_DATA")
     local VAULT_RESOURCE_GROUP=$(getJSONValue "resourcegroup" "$VAULT_DATA")
-    
-    SECRET_GUID=$(
-        save_secret \
-          "$VAULT_NAME" \
-          "$VAULT_REGION" \
-          "$VAULT_RESOURCE_GROUP" \
-          "$KEY" \
-          "$JSON_DATA" \
-      )
-      echo "SAVE SUCCESSFUL SECRET_GUID=${SECRET_GUID}"
+    if [[ "$VAULT_NAME" && "$VAULT_REGION" && "$VAULT_RESOURCE_GROUP" && "$KEY" && "$JSON_DATA" ]]; then
+        SECRET_GUID=$(
+            save_secret \
+            "$VAULT_NAME" \
+            "$VAULT_REGION" \
+            "$VAULT_RESOURCE_GROUP" \
+            "$KEY" \
+            "$JSON_DATA" \
+        )
+        echo "SAVE SUCCESSFUL SECRET_GUID=${SECRET_GUID}"
+    fi
   #  else
     #TODO use hashicorp
    # echo "Hashicorp"
@@ -152,14 +151,16 @@ function readData {
     local VAULT_NAME=$(getJSONValue "name" "$VAULT_DATA")
     local VAULT_REGION=$(getJSONValue "region" "$VAULT_DATA")
     local VAULT_RESOURCE_GROUP=$(getJSONValue "resourcegroup" "$VAULT_DATA")
-     PASSWORD_SECRET=$(
-        retrieve_secret \
-          "$VAULT_NAME" \
-          "$VAULT_REGION" \
-          "$VAULT_RESOURCE_GROUP"  \
-          "$KEY" \
-      )
-      echo "$PASSWORD_SECRET"
+    if [[ "$VAULT_NAME" && "$VAULT_REGION" && "$VAULT_RESOURCE_GROUP" && "$KEY" ]]; then
+        PASSWORD_SECRET=$(
+            retrieve_secret \
+            "$VAULT_NAME" \
+            "$VAULT_NAME" \
+            "$VAULT_RESOURCE_GROUP"  \
+            "$KEY" \
+        )
+        echo "$PASSWORD_SECRET"
+    fi
    # else
    #     echo "Hashicorp"
    # fi
@@ -232,19 +233,21 @@ function base64TextDecode {
 }
 
 function deleteSecret {
-    local vault_key=$1
+    local KEY=$1
     local VAULT_DATA=$2
     local VAULT_NAME=$(getJSONValue "name" "$VAULT_DATA")
     local VAULT_REGION=$(getJSONValue "region" "$VAULT_DATA")
     local VAULT_RESOURCE_GROUP=$(getJSONValue "resourcegroup" "$VAULT_DATA")
-    DELETE_SECRET_RESPONSE=$(
-        delete_secret \
-          "$VAULT_NAME" \
-          "$VAULT_REGION" \
-          "$VAULT_RESOURCE_GROUP" \
-          "$vault_key"
-      )
-      echo "DELETE_SECRET_RESPONSE=${DELETE_SECRET_RESPONSE}"
+    if [[ "$VAULT_NAME" && "$VAULT_REGION" && "$VAULT_RESOURCE_GROUP" && "$KEY" ]]; then
+        DELETE_SECRET_RESPONSE=$(
+            delete_secret \
+            "$VAULT_NAME" \
+            "$VAULT_REGION" \
+            "$VAULT_RESOURCE_GROUP" \
+            "$KEY"
+        )
+        echo "DELETE_SECRET_RESPONSE=${DELETE_SECRET_RESPONSE}"
+    fi
 }
 
 function deleteVault {
