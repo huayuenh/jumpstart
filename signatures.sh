@@ -149,14 +149,16 @@ function readData {
     local VAULT_NAME=$(getJSONValue "name" "$VAULT_DATA")
     local VAULT_REGION=$(getJSONValue "region" "$VAULT_DATA")
     local VAULT_RESOURCE_GROUP=$(getJSONValue "resourcegroup" "$VAULT_DATA")
-     PASSWORD_SECRET=$(
-        retrieve_secret \
-          "$VAULT_NAME" \
-          "$VAULT_REGION" \
-          "$VAULT_RESOURCE_GROUP"  \
-          "$KEY" \
-      )
-      echo "$PASSWORD_SECRET"
+    if [[ "$VAULT_NAME" && "$VAULT_REGION" && "$VAULT_RESOURCE_GROUP" && "$KEY" ]]; then
+        PASSWORD_SECRET=$(
+            retrieve_secret \
+            "$VAULT_NAME" \
+            "$VAULT_REGION" \
+            "$VAULT_RESOURCE_GROUP"  \
+            "$KEY" \
+        )
+        echo "$PASSWORD_SECRET"
+    fi
    # else
    #     echo "Hashicorp"
    # fi
