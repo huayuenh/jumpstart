@@ -12,11 +12,8 @@ VAULT_DATA=$(buildVaultAccessDetailsJSON "$VAULT_INSTANCE" "$IBMCLOUD_TARGET_REG
 
 #retrieve existing keys from Vault
 echo "Checking Key Protect Vault for keys"
-echo "reading data"
 JSON_PRIV_DATA="$(readData "$REGISTRY_NAMESPACE.keys" "$VAULT_DATA")"
 JSON_PUB_DATA="$(readData "$REGISTRY_NAMESPACE.pub" "$VAULT_DATA")"
-echo "retrieving saved data"
-echo "extract data"
 echo "$JSON_PRIV_DATA"
 EXISTING_KEY="$(getJSONValue "$DEVOPS_SIGNER" "$JSON_PRIV_DATA")"
 
@@ -25,23 +22,21 @@ if [[ "$EXISTING_KEY" == "null" || -z "$EXISTING_KEY" ]]; then
     echo "Create  $DEVOPS_SIGNER singer key"
     docker trust key generate "$DEVOPS_SIGNER"
     # add new keys to json
-    echo "start check"
     JSON_PRIV_DATA=$(addTrustFileToJSON "$DEVOPS_SIGNER" "$JSON_PRIV_DATA" "$DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE")
     base64PublicPem=$(base64TextEncode "./$DEVOPS_SIGNER.pub")
     publicKeyEntry=$(addJSONEntry "$publicKeyEntry" "name" "$DEVOPS_SIGNER.pub")
     publicKeyEntry=$(addJSONEntry "$publicKeyEntry" "value" "$base64PublicPem")
     JSON_PUB_DATA=$(addJSONEntry "$JSON_PUB_DATA" "$DEVOPS_SIGNER" "$publicKeyEntry")
-    echo "end check"
+   
+   
     # delete old keys to allow for update
     if [ "$JSON_PRIV_DATA" ]; then
-        echo "start delete"
         deleteSecret "$REGISTRY_NAMESPACE.keys" "$VAULT_DATA"
         deleteSecret "$REGISTRY_NAMESPACE.pub" "$VAULT_DATA"
-        echo "end delete"
     fi
 
     #save public/private key pairs to the vault
-    echo "start save"
+    echo "start save updated payload"
     echo "$JSON_PRIV_DATA"
     saveData "$REGISTRY_NAMESPACE.keys" "$VAULT_DATA" "$JSON_PRIV_DATA"
     saveData "$REGISTRY_NAMESPACE.pub" "$VAULT_DATA" "$JSON_PUB_DATA"
