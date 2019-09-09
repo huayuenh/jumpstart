@@ -31,15 +31,19 @@ function getJSONValue {
 
 #add or update key/value pair to json
 function addJSONEntry {
-    local json=$1
+    local JSON=$1
     #init json if null
-    if [ -z "$json" ]
+    if [ -z "$JSON" ]
     then
-        json="{}"
+        JSON="{}"
     fi
-    local key=$2
-    local value=$3
-    echo $(jq --arg key "$key" --arg value "$value" '.[$key] = $value' <<<$json)
+    local KEY=$2
+    local VALUE=$3
+    if [[ "$KEY" && "$VALUE" ]]; then
+        echo $(jq --arg key "$KEY" --arg value "$VALUE" '.[$KEY] = $VALUE' <<<$JSON)
+    else
+        echo "$JSON"
+    fi
 }
 
 #remove the key from json
@@ -96,7 +100,6 @@ function buildVaultAccessDetailsJSON {
 #JSON_DATA payload for the Vault store or other containing the pem file name and data
 #VAULT_DATA data wrapper for values required for Vault access
 function saveData {
-    echo "insave data"
     #name of the entry root, repokey, delegate etc. This represents the vault/store entry key
     local KEY=$1
     #Docker Trust keys are named with GUIDs. Name needs to be correctly associated with the pem data
@@ -107,7 +110,6 @@ function saveData {
     local VAULT_NAME=$(getJSONValue "name" "$VAULT_DATA")
     local VAULT_REGION=$(getJSONValue "region" "$VAULT_DATA")
     local VAULT_RESOURCE_GROUP=$(getJSONValue "resourcegroup" "$VAULT_DATA")
-    echo "test error location"
     if [[ "$VAULT_NAME" && "$VAULT_REGION" && "$VAULT_RESOURCE_GROUP" && "$KEY" && "$JSON_DATA" ]]; then
         SECRET_GUID=$(
             save_secret \
