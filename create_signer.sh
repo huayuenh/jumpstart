@@ -12,8 +12,11 @@ VAULT_DATA=$(buildVaultAccessDetailsJSON "$VAULT_INSTANCE" "$IBMCLOUD_TARGET_REG
 
 #retrieve existing keys from Vault
 echo "Checking Key Protect Vault for keys"
+echo "reading data"
 JSON_PRIV_DATA="$(readData "$REGISTRY_NAMESPACE.keys" "$VAULT_DATA")"
 JSON_PUB_DATA="$(readData "$REGISTRY_NAMESPACE.pub" "$VAULT_DATA")"
+
+echo "extract data"
 EXISTING_KEY="$(getJSONValue "$DEVOPS_SIGNER" "$JSON_PRIV_DATA")"
 
 if [[ "$EXISTING_KEY" == "null" || -z "$EXISTING_KEY" ]]; then
@@ -30,11 +33,14 @@ if [[ "$EXISTING_KEY" == "null" || -z "$EXISTING_KEY" ]]; then
     echo "end check"
     # delete old keys to allow for update
     if [ "$JSON_PRIV_DATA" ]; then
+        echo "start delete"
         deleteSecret "$REGISTRY_NAMESPACE.keys" "$VAULT_DATA"
         deleteSecret "$REGISTRY_NAMESPACE.pub" "$VAULT_DATA"
+        echo "end delete"
     fi
 
     #save public/private key pairs to the vault
+    echo "start save"
     saveData "$REGISTRY_NAMESPACE.keys" "$VAULT_DATA" "$JSON_PRIV_DATA"
     saveData "$REGISTRY_NAMESPACE.pub" "$VAULT_DATA" "$JSON_PUB_DATA"
 else
