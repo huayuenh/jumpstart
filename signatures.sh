@@ -96,6 +96,7 @@ function buildVaultAccessDetailsJSON {
 #JSON_DATA payload for the Vault store or other containing the pem file name and data
 #VAULT_DATA data wrapper for values required for Vault access
 function saveData {
+    echo "insave data"
     #name of the entry root, repokey, delegate etc. This represents the vault/store entry key
     local KEY=$1
     #Docker Trust keys are named with GUIDs. Name needs to be correctly associated with the pem data
