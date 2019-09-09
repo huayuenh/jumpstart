@@ -14,18 +14,12 @@ VAULT_DATA=$(buildVaultAccessDetailsJSON "$VAULT_INSTANCE" "$IBMCLOUD_TARGET_REG
 echo "Checking Key Protect Vault for keys"
 JSON_PRIV_DATA="$(readData "$REGISTRY_NAMESPACE.keys" "$VAULT_DATA")"
 JSON_PUB_DATA="$(readData "$REGISTRY_NAMESPACE.pub" "$VAULT_DATA")"
-
-echo "***************************"
-#check if entry exists
-echo "$JSON_PRIV_DATA"
-echo "***************"
 EXISTING_KEY="$(getJSONValue "$DEVOPS_SIGNER" "$JSON_PRIV_DATA")"
-echo "$EXISTING_KEY"
+
 if [[ "$EXISTING_KEY" == "null" || -z "$EXISTING_KEY" ]]; then
     echo "Key for $DEVOPS_SIGNER not found."
     echo "Create  $DEVOPS_SIGNER singer key"
     docker trust key generate "$DEVOPS_SIGNER"
-    echo "Restoring keys from $VAULT_INSTANCE"
     # add new keys to json
     JSON_PRIV_DATA=$(addTrustFileToJSON "$DEVOPS_SIGNER" "$JSON_PRIV_DATA" "$DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE")
     base64PublicPem=$(base64TextEncode "./$DEVOPS_SIGNER.pub")
