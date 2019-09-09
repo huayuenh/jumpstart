@@ -31,19 +31,15 @@ function getJSONValue {
 
 #add or update key/value pair to json
 function addJSONEntry {
-    local JSON=$1
+    local json=$1
     #init json if null
-    if [ -z "$JSON" ]
+    if [ -z "$json" ]
     then
-        JSON="{}"
+        json="{}"
     fi
-    local KEY=$2
-    local VALUE=$3
-    if [[ "$KEY" && "$VALUE" ]]; then
-        echo $(jq --arg key "$KEY" --arg value "$VALUE" '.[$key] = $VALUE' <<<$JSON)
-    else
-        echo "$JSON"
-    fi
+    local key=$2
+    local value=$3
+    echo $(jq --arg key "$key" --arg value "$value" '.[$key] = $value' <<<$json)
 }
 
 #remove the key from json
