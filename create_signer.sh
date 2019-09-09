@@ -23,7 +23,7 @@ echo "***************"
 EXISTING_KEY="$(getJSONValue "$DEVOPS_SIGNER" "$JSON_PRIV_DATA")"
 echo "search for $DEVOPS_SIGNER"
 echo "$EXISTING_KEY"
-if [ "$EXISTING_KEY" == "null" ]; then
+if [[ "$EXISTING_KEY" == "null" || -z "$EXISTING_KEY" ]]; then
     echo "key not found"
 else
     echo "key found"
