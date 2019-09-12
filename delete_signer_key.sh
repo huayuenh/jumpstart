@@ -22,7 +22,9 @@ if [[ "$EXISTING_KEY" == "null" || -z "$EXISTING_KEY" ]]; then
     # add new keys to json
     JSON_PRIV_DATA=$(removeJSONEntry "$JSON_PRIV_DATA" "$DEVOPS_SIGNER")
     JSON_PUB_DATA=$(removeJSONEntry "$JSON_PUB_DATA" "$DEVOPS_SIGNER")
-   
+   echo "Keys"
+   echo "$JSON_PRIV_DATA"
+   echo "$JSON_PUB_DATA"
     # delete old keys to allow for update
     if [ "$JSON_PRIV_DATA" ]; then
         deleteSecret "$REGISTRY_NAMESPACE.keys" "$VAULT_DATA"
