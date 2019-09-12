@@ -16,7 +16,7 @@ JSON_PRIV_DATA="$(readData "$REGISTRY_NAMESPACE.keys" "$VAULT_DATA")"
 JSON_PUB_DATA="$(readData "$REGISTRY_NAMESPACE.pub" "$VAULT_DATA")"
 EXISTING_KEY="$(getJSONValue "$DEVOPS_SIGNER" "$JSON_PRIV_DATA")"
 
-if [[ "$EXISTING_KEY" == "null" || -z "$EXISTING_KEY" ]]; then
+if [ "$EXISTING_KEY" ]; then
     echo "Key for $DEVOPS_SIGNER  found."
     echo "Removing  $DEVOPS_SIGNER singer key"
     # add new keys to json
