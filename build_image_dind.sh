@@ -45,7 +45,7 @@ if [ ! -z "${GIT_COMMIT}" ]; then
   IMAGE_TAG=${GIT_COMMIT_SHORT}-${IMAGE_TAG}
 fi
 if [ ! -z "${GIT_BRANCH}" ]; then IMAGE_TAG=${GIT_BRANCH}-${IMAGE_TAG} ; fi
-IMAGE_TAG=${BUILD_NUMBER}-${IMAGE_TAG}
+export IMAGE_TAG=${BUILD_NUMBER}-${IMAGE_TAG}
 echo "=========================================================="
 echo -e "BUILDING CONTAINER IMAGE: ${IMAGE_NAME}:${IMAGE_TAG}"
 if [ -z "${DOCKER_ROOT}" ]; then DOCKER_ROOT=. ; fi
