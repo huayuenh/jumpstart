@@ -11,13 +11,20 @@ function findSigner {
     # Check if the Builder signature is present
     if jq -e ".[] | .SignedTags[] | select(.SignedTag=\"$IMAGE_TAG\") | select (.Signers[] | contains(\"$SIGNER\"))" <<<"$trustData"; then
         echo "$BUILD_SIGNER found"
+        echo "true"
+    else
+        echo "$BUILD_SIGNER not found"
+        echo "false"
     fi
 }
 
 function findTrustData {
     local GUN=$1
     trustData=$(docker trust inspect "$GUN")
-    if jq -e ".[]" <<<"$trustData"; then
-        echo "Trust initialised"
+    result=$(jq -e ".[]" <<<"$trustData")
+    if [ "$result" ]; then
+        echo "true"
+    else
+        echo "false"
     fi
 }
