@@ -1,7 +1,27 @@
 #!/bin/bash
 # uncomment to debug the script
 # set -x
+if [ -z "$REGISTRY_URL" ]; then
+  # Use the ibmcloud cr info to find the target registry url 
+  export REGISTRY_URL=$(ibmcloud cr info | grep -m1 -i '^Container Registry' | awk '{print $3;}')
+fi
+export REGISTRY_NAMESPACE=${REGISTRY_NAMESPACE:-'jumpstart'}
+export IMAGE_NAME=${IMAGE_NAME:-'signed-hello-app'}
 
+export GUN="$REGISTRY_URL/$REGISTRY_NAMESPACE/$IMAGE_NAME"
+export DOCKER_CONTENT_TRUST_SERVER=${DOCKER_CONTENT_TRUST_SERVER:-"https://$REGISTRY_URL:4443"}
+echo "DOCKER_CONTENT_TRUST_SERVER=$DOCKER_CONTENT_TRUST_SERVER"
+
+# Notary Setup usage avec DCT
+# https://github.com/theupdateframework/notary/blob/master/docs/command_reference.md#set-up-notary-cli
+
+export DOCKER_CONTENT_TRUST_ROOT_PASSPHRASE=${DOCKER_CONTENT_TRUST_ROOT_PASSPHRASE:-"dctrootpassphrase"}
+export DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE=${DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE:-"dctrepositorypassphrase"}
+
+export NOTARY_ROOT_PASSPHRASE="$DOCKER_CONTENT_TRUST_ROOT_PASSPHRASE"
+export NOTARY_TARGETS_PASSPHRASE="$DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE"
+export NOTARY_SNAPSHOT_PASSPHRASE="$DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE"
+export NOTARY_AUTH=$(echo -e "iamapikey:$IBM_CLOUD_API_KEY" | base64)
 #remove the key from json
 function findSigner {
     local SIGNER=$1
