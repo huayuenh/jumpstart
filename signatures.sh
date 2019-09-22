@@ -173,8 +173,8 @@ function writeFile {
     then
         SAVEPATH="$DOCKER_TRUST_DIRECTORY"
         echo "creating trust directory" 
-        mkdir ~/.docker/trust
-        mkdir ~/.docker/trust/private
+        mkdir -p ~/.docker/trust
+        mkdir -p ~/.docker/trust/private
     fi
 
     echo "$(base64TextDecode $file_data_base64)" >> "$SAVEPATH"/"$file_name"
