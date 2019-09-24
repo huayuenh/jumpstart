@@ -15,7 +15,7 @@ echo "Checking Key Protect Vault for keys"
 JSON_PRIV_DATA="$(readData "$REGISTRY_NAMESPACE.keys" "$VAULT_DATA")"
 JSON_PUB_DATA="$(readData "$REGISTRY_NAMESPACE.pub" "$VAULT_DATA")"
 EXISTING_KEY="$(getJSONValue "$DEVOPS_SIGNER" "$JSON_PRIV_DATA")"
-
+echo 
 if [[ "$EXISTING_KEY" == "null" || -z "$EXISTING_KEY" ]]; then
     echo "Key for $DEVOPS_SIGNER not found."
     echo "Create  $DEVOPS_SIGNER singer key"
@@ -41,6 +41,8 @@ else
     echo "key for $DEVOPS_SIGNER already exists"
     echo "No op"
 fi
+echo "SAVED $JSON_PRIV_DATA"
+echo "SAVED $JSON_PUB_DATA"
 
 
 
