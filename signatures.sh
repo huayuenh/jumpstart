@@ -105,21 +105,51 @@ function saveData {
     local VAULT_REGION=$(getJSONValue "region" "$VAULT_DATA")
     local VAULT_RESOURCE_GROUP=$(getJSONValue "resourcegroup" "$VAULT_DATA")
     
-    if [[ "$VAULT_NAME" && "$VAULT_REGION" && "$VAULT_RESOURCE_GROUP" && "$KEY" && "$JSON_DATA" ]]; then
-        SECRET_GUID=$(
-            save_secret \
-            "$VAULT_NAME" \
-            "$VAULT_REGION" \
-            "$VAULT_RESOURCE_GROUP" \
-            "$KEY" \
-            "$JSON_DATA" \
-        )
-        echo "SAVE SUCCESSFUL SECRET_GUID=${SECRET_GUID}"
-    fi
+    for (( i = 0 ; i < 5 ; i++ )); do
+        if [[ "$VAULT_NAME" && "$VAULT_REGION" && "$VAULT_RESOURCE_GROUP" && "$KEY" && "$JSON_DATA" ]]; then
+            local SECRET_GUID=$(
+                save_secret \
+                "$VAULT_NAME" \
+                "$VAULT_REGION" \
+                "$VAULT_RESOURCE_GROUP" \
+                "$KEY" \
+                "$JSON_DATA" \
+            )
+            if [ "$SECRET_GUID" ]; then
+                echo "SAVE SUCCESSFUL SECRET_GUID=${SECRET_GUID}"
+                break
+            else
+                sleep 0.5
+            fi
+        fi
+    done
   #  else
     #TODO use hashicorp
    # echo "Hashicorp"
   #  fi
+}
+
+#required for public key creation and updating of the key json
+function upsertData {
+
+    #See buildVaultJSONDetails
+    #read old data
+    #create back up of old data
+    #save new data
+    #delete backup
+    local KEY=$1
+    #Docker Trust keys are named with GUIDs. Name needs to be correctly associated with the pem data
+    local VAULT_DATA=$2
+    local JSON_DATA=$3
+    local OLD_JSON_DATA=$4
+    if [ "$OLD_JSON_DATA" ]; then
+        saveData "$KEY.bak" "$VAULT_DATA" "$OLD_JSON_DATA"
+    fi
+    deleteSecret "$KEY" "$VAULT_DATA"
+    saveData "$KEY" "$VAULT_DATA" "$JSON_DATA")
+    if [ "$OLD_JSON_DATA" ]; then
+        deleteSecret "$KEY.bak" "$VAULT_DATA"
+    fi
 }
 
 #

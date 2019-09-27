@@ -14,6 +14,8 @@ VAULT_DATA=$(buildVaultAccessDetailsJSON "$VAULT_INSTANCE" "$IBMCLOUD_TARGET_REG
 echo "Checking Key Protect Vault for keys"
 JSON_PRIV_DATA="$(readData "$REGISTRY_NAMESPACE.keys" "$VAULT_DATA")"
 JSON_PUB_DATA="$(readData "$REGISTRY_NAMESPACE.pub" "$VAULT_DATA")"
+JSON_PRIV_DATA_BAK=$JSON_PRIV_DATA
+JSON_PUB_DATA_BAK=$JSON_PUB_DATA
 EXISTING_KEY="$(getJSONValue "$DEVOPS_SIGNER" "$JSON_PRIV_DATA")"
 
 if [[ "$EXISTING_KEY" == "null" || -z "$EXISTING_KEY" ]]; then
@@ -26,17 +28,9 @@ if [[ "$EXISTING_KEY" == "null" || -z "$EXISTING_KEY" ]]; then
     publicKeyEntry=$(addJSONEntry "$publicKeyEntry" "name" "$DEVOPS_SIGNER.pub")
     publicKeyEntry=$(addJSONEntry "$publicKeyEntry" "value" "$base64PublicPem")
     JSON_PUB_DATA=$(addJSONEntry "$JSON_PUB_DATA" "$DEVOPS_SIGNER" "$publicKeyEntry")
-   
-   
-    # delete old keys to allow for update
-    if [ "$JSON_PRIV_DATA" ]; then
-        deleteSecret "$REGISTRY_NAMESPACE.keys" "$VAULT_DATA"
-        deleteSecret "$REGISTRY_NAMESPACE.pub" "$VAULT_DATA"
-    fi
-
-    #save public/private key pairs to the vault
-    saveData "$REGISTRY_NAMESPACE.keys" "$VAULT_DATA" "$JSON_PRIV_DATA"
-    saveData "$REGISTRY_NAMESPACE.pub" "$VAULT_DATA" "$JSON_PUB_DATA"
+    
+    upsertData "$REGISTRY_NAMESPACE.pub" "$VAULT_DATA" "$JSON_PUB_DATA_BAK" 
+    
 else
     echo "key for $DEVOPS_SIGNER already exists"
     echo "No op"
