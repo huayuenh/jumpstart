@@ -117,7 +117,7 @@ function saveData {
             )
             if [ "$SECRET_GUID" ]; then
                 echo "SAVE SUCCESSFUL SECRET_GUID=${SECRET_GUID}"
-                #break
+                break
             else
                 sleep 0.5
             fi
