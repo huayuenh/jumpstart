@@ -105,7 +105,7 @@ function saveData {
     local VAULT_REGION=$(getJSONValue "region" "$VAULT_DATA")
     local VAULT_RESOURCE_GROUP=$(getJSONValue "resourcegroup" "$VAULT_DATA")
     
-    for (( i = 0 ; i < 5 ; i++ )); do
+    for (( i=0 ; i<5 ; i++ )); do
         if [[ "$VAULT_NAME" && "$VAULT_REGION" && "$VAULT_RESOURCE_GROUP" && "$KEY" && "$JSON_DATA" ]]; then
             local SECRET_GUID=$(
                 save_secret \
