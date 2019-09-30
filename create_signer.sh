@@ -40,6 +40,8 @@ else
     echo "key for $DEVOPS_SIGNER already exists"
     echo "No op"
 fi
+echo "DATA $JSON_PRIV_DATA"
+echo "DATA $JSON_PUB_DATA"
 
 
 
