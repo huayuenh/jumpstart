@@ -55,6 +55,11 @@ function addTrustFileToJSON {
     local json=$2
     local passphrase=$3
     
+    if [ -z "$json" ]
+    then
+        json="{}"
+    fi
+
     #check all files in the dokcer trust
     for file in $DOCKER_TRUST_DIRECTORY/*
     do
@@ -100,15 +105,24 @@ function saveData {
     local VAULT_REGION=$(getJSONValue "region" "$VAULT_DATA")
     local VAULT_RESOURCE_GROUP=$(getJSONValue "resourcegroup" "$VAULT_DATA")
     
-    SECRET_GUID=$(
-        save_secret \
-          "$VAULT_NAME" \
-          "$VAULT_REGION" \
-          "$VAULT_RESOURCE_GROUP" \
-          "$KEY" \
-          "$JSON_DATA" \
-      )
-      echo "SAVE SUCCESSFUL SECRET_GUID=${SECRET_GUID}"
+    for (( i=0 ; i<5 ; i++ )); do
+        if [[ "$VAULT_NAME" && "$VAULT_REGION" && "$VAULT_RESOURCE_GROUP" && "$KEY" && "$JSON_DATA" ]]; then
+            local SECRET_GUID=$(
+                save_secret \
+                "$VAULT_NAME" \
+                "$VAULT_REGION" \
+                "$VAULT_RESOURCE_GROUP" \
+                "$KEY" \
+                "$JSON_DATA" \
+            )
+            if [ "$SECRET_GUID" ]; then
+                echo "SAVE SUCCESSFUL"
+                break
+            else
+                sleep 0.5
+            fi
+        fi
+    done
   #  else
     #TODO use hashicorp
    # echo "Hashicorp"
@@ -160,15 +174,19 @@ function writeFile {
     local json_data=$1
     local file_name=$(getJSONValue "name" "$json_data")
     local file_data_base64=$(getJSONValue "value" "$json_data")
-    if [  ! -d "$DOCKER_TRUST_HOME" ] 
+    local SAVEPATH=$2
+
+    if [  -z "$SAVEPATH" ] 
     then
+        SAVEPATH="$DOCKER_TRUST_DIRECTORY"
         echo "creating trust directory" 
-        mkdir ~/.docker/trust
-        mkdir ~/.docker/trust/private
+        mkdir -p ~/.docker/trust
+        mkdir -p ~/.docker/trust/private
     fi
-    echo "$(base64TextDecode $file_data_base64)" >> "$DOCKER_TRUST_DIRECTORY"/"$file_name"
+
+    echo "$(base64TextDecode $file_data_base64)" >> "$SAVEPATH"/"$file_name"
     #pem files only valid in rw mode
-    chmod -R 600 "$DOCKER_TRUST_DIRECTORY"/"$file_name"
+    chmod -R 600 "$SAVEPATH"/"$file_name"
 }
 
 #this will store a map of the pem file name with the associated roles
@@ -219,19 +237,22 @@ function base64TextDecode {
 }
 
 function deleteSecret {
-    local vault_key=$1
+    local KEY=$1
     local VAULT_DATA=$2
     local VAULT_NAME=$(getJSONValue "name" "$VAULT_DATA")
     local VAULT_REGION=$(getJSONValue "region" "$VAULT_DATA")
     local VAULT_RESOURCE_GROUP=$(getJSONValue "resourcegroup" "$VAULT_DATA")
-    DELETE_SECRET_RESPONSE=$(
-        delete_secret \
-          "$VAULT_NAME" \
-          "$VAULT_REGION" \
-          "$VAULT_RESOURCE_GROUP" \
-          "$vault_key"
-      )
-      echo "DELETE_SECRET_RESPONSE=${DELETE_SECRET_RESPONSE}"
+
+    if [[ "$VAULT_NAME" && "$VAULT_REGION" && "$VAULT_RESOURCE_GROUP" && "$KEY" ]]; then
+        DELETE_SECRET_RESPONSE=$(
+            delete_secret \
+            "$VAULT_NAME" \
+            "$VAULT_REGION" \
+            "$VAULT_RESOURCE_GROUP" \
+            "$KEY"
+        )
+        echo "DELETE_SECRET_RESPONSE=${DELETE_SECRET_RESPONSE}"
+    fi
 }
 
 function deleteVault {
@@ -246,4 +267,80 @@ function deleteVault {
           "$VAULT_RESOURCE_GROUP"
       )
       echo "DELETE_VAULT_RESPONSE=${DELETE_VAULT_RESPONSE}"
+}
+
+function createSigner {
+
+    if [ -z "$DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE" ]; then
+        export DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE=$(openssl rand -base64 16)
+    fi
+
+    export DOCKER_CONTENT_TRUST=1
+
+    #set Vault access
+    VAULT_DATA=$(buildVaultAccessDetailsJSON "$VAULT_INSTANCE" "$IBMCLOUD_TARGET_REGION" "$IBMCLOUD_TARGET_RESOURCE_GROUP")
+
+    #retrieve existing keys from Vault
+    echo "Checking Key Protect Vault for keys"
+    JSON_PRIV_DATA="$(readData "$REGISTRY_NAMESPACE.keys" "$VAULT_DATA")"
+    JSON_PUB_DATA="$(readData "$REGISTRY_NAMESPACE.pub" "$VAULT_DATA")"
+    EXISTING_KEY="$(getJSONValue "$DEVOPS_SIGNER" "$JSON_PRIV_DATA")"
+    if [[ "$EXISTING_KEY" == "null" || -z "$EXISTING_KEY" ]]; then
+        echo "Key for $DEVOPS_SIGNER not found."
+        echo "Create  $DEVOPS_SIGNER singer key"
+        docker trust key generate "$DEVOPS_SIGNER"
+        # add new keys to json
+        JSON_PRIV_DATA=$(addTrustFileToJSON "$DEVOPS_SIGNER" "$JSON_PRIV_DATA" "$DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE")
+        base64PublicPem=$(base64TextEncode "./$DEVOPS_SIGNER.pub")
+        publicKeyEntry=$(addJSONEntry "$publicKeyEntry" "name" "$DEVOPS_SIGNER.pub")
+        publicKeyEntry=$(addJSONEntry "$publicKeyEntry" "value" "$base64PublicPem")
+        JSON_PUB_DATA=$(addJSONEntry "$JSON_PUB_DATA" "$DEVOPS_SIGNER" "$publicKeyEntry")
+    
+    
+        # delete old keys to allow for update
+        if [ "$JSON_PRIV_DATA" ]; then
+            deleteSecret "$REGISTRY_NAMESPACE.keys" "$VAULT_DATA"
+            deleteSecret "$REGISTRY_NAMESPACE.pub" "$VAULT_DATA"
+        fi
+
+        #save public/private key pairs to the vault
+        saveData "$REGISTRY_NAMESPACE.keys" "$VAULT_DATA" "$JSON_PRIV_DATA"
+        saveData "$REGISTRY_NAMESPACE.pub" "$VAULT_DATA" "$JSON_PUB_DATA"
+    else
+        echo "key for $DEVOPS_SIGNER already exists"
+        echo "No op"
+    fi
+}
+
+function deleteSigner {
+    export DOCKER_CONTENT_TRUST=1
+
+    #set Vault access
+    VAULT_DATA=$(buildVaultAccessDetailsJSON "$VAULT_INSTANCE" "$IBMCLOUD_TARGET_REGION" "$IBMCLOUD_TARGET_RESOURCE_GROUP")
+
+    #retrieve existing keys from Vault
+    echo "Checking Key Protect Vault for keys"
+    JSON_PRIV_DATA="$(readData "$REGISTRY_NAMESPACE.keys" "$VAULT_DATA")"
+    JSON_PUB_DATA="$(readData "$REGISTRY_NAMESPACE.pub" "$VAULT_DATA")"
+    EXISTING_KEY="$(getJSONValue "$DEVOPS_SIGNER" "$JSON_PRIV_DATA")"
+
+    if [ "$EXISTING_KEY" ]; then
+        echo "Key for $DEVOPS_SIGNER  found."
+        echo "Removing  $DEVOPS_SIGNER singer key"
+        # add new keys to json
+        JSON_PRIV_DATA=$(removeJSONEntry "$JSON_PRIV_DATA" "$DEVOPS_SIGNER")
+        JSON_PUB_DATA=$(removeJSONEntry "$JSON_PUB_DATA" "$DEVOPS_SIGNER")
+        # delete old keys to allow for update
+        if [ "$JSON_PRIV_DATA" ]; then
+            deleteSecret "$REGISTRY_NAMESPACE.keys" "$VAULT_DATA"
+            deleteSecret "$REGISTRY_NAMESPACE.pub" "$VAULT_DATA"
+        fi
+
+        #save public/private key pairs to the vault
+        saveData "$REGISTRY_NAMESPACE.keys" "$VAULT_DATA" "$JSON_PRIV_DATA"
+        saveData "$REGISTRY_NAMESPACE.pub" "$VAULT_DATA" "$JSON_PUB_DATA"
+    else
+        echo "key for $DEVOPS_SIGNER already exists"
+        echo "No op"
+    fi
 }
