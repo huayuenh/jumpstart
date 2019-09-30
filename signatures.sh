@@ -379,6 +379,7 @@ function findTrustData {
     export GUN="$REGISTRY_URL/$REGISTRY_NAMESPACE/$IMAGE_NAME"
     export DOCKER_CONTENT_TRUST_SERVER=${DOCKER_CONTENT_TRUST_SERVER:-"https://$REGISTRY_URL:4443"}
     echo "DOCKER_CONTENT_TRUST_SERVER=$DOCKER_CONTENT_TRUST_SERVER"
+    echo "GUN2 $GUN"
     trustData=$(docker trust inspect "$GUN")
     result=$(jq -e ".[]" <<<"$trustData")
     if [ "$result" ]; then
