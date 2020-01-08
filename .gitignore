@@ -1,1 +1,3 @@
 sonar-scanner/tmp
+github-searches/node_modules
+github-searches/package-lock.json

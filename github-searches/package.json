@@ -1,0 +1,8 @@
+{
+    "name": "github-searches",
+    "dependencies": {
+        "request": "^2.87.0",
+        "parse-link-header": "^1.0.0",
+        "yargs": "^13.0.0"
+    }
+}
