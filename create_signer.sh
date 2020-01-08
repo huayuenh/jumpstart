@@ -35,10 +35,6 @@ if [[ "$EXISTING_KEY" == "null" || -z "$EXISTING_KEY" ]]; then
    
     echo "Start delete"
     # delete old keys to allow for update
-    if [ "$JSON_PRIV_DATA" ]; then
-        deleteSecret "$REGISTRY_NAMESPACE.keys" "$VAULT_DATA"
-        deleteSecret "$REGISTRY_NAMESPACE.pub" "$VAULT_DATA"
-    fi
     echo "Post  delete"
     #save public/private key pairs to the vault
     echo "START SAVE"
