@@ -15,8 +15,7 @@ echo "*********************"
 cd /usr/local/bin
 ls
 echo "********************"
-cd /usr/local/bin/notary
-ls
+whoami
 
 echo "execute"
 
