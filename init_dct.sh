@@ -1,18 +1,26 @@
-curl -L https://github.com/theupdateframework/notary/releases/download/v0.6.1/notary-Linux-amd64 -o /usr/local/bin/notary
+#!/bin/bash
+echo "TEST IMPORT SCRIPT"
+# Get the notary binary
+#curl -L https://github.com/theupdateframework/notary/releases/download/v0.6.1/notary-Linux-amd64 -o /usr/local/bin/notary
+# Make it executable
 chmod +x /usr/local/bin/notary
 
 export IBMCLOUD_API_KEY=$IBM_CLOUD_API_KEY
 export DOCKER_CONTENT_TRUST=1
 
+# Setup Docker-In-Docker
 source <(curl -s -S -L "https://raw.githubusercontent.com/jauninb/jumpstart/master/setup_dind.sh")
 
+# configure the container registry
 echo "REGISTRY REGION $REGISTRY_REGION"
 export REGISTRY_REGION=$(echo "$REGISTRY_REGION" | awk -F ':' '{print $NF;}')
 ibmcloud cr region-set $REGISTRY_REGION
 echo "REGISTRY REGION $REGISTRY_REGION"
 
+# login docker to ibm container registry
 ibmcloud cr login
 
+# check the existence of the container registry namespace
 REGISTRY_URL=$(ibmcloud cr info | grep -m1 -i '^Container Registry' | awk '{print $3;}')
 echo "Check for $REGISTRY_NAMESPACE existence"
 if ibmcloud cr namespaces | tail --lines=+4 | head --lines=-2 | grep "^$REGISTRY_NAMESPACE"; then
