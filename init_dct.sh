@@ -6,6 +6,17 @@ echo "CURL COMPLETE"
 # Make it executable
 echo "path content"
 ls /usr/local/bin/notary
+cd /usr
+ls
+echo "**********************"
+cd /usr/local
+ls
+echo "*********************"
+cd /usr/local/bin
+ls
+echo "********************"
+cd /usr/local/bin/notary
+ls
 
 echo "execute"
 
