@@ -4,6 +4,11 @@ echo "TEST IMPORT SCRIPT"
 curl -L https://github.com/theupdateframework/notary/releases/download/v0.6.1/notary-Linux-amd64 -o /usr/local/bin/notary
 echo "CURL COMPLETE"
 # Make it executable
+echo "path content"
+ls /usr/local/bin/notary
+
+echo "execute"
+
 chmod +x /usr/local/bin/notary
 
 export IBMCLOUD_API_KEY=$IBM_CLOUD_API_KEY
