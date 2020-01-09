@@ -19,13 +19,13 @@ whoami
 
 echo "execute"
 stat /usr/local/bin/notary
-#chmod +x /usr/local/bin/notary
+chmod +x /usr/local/bin/notary
 
 export IBMCLOUD_API_KEY=$IBM_CLOUD_API_KEY
 export DOCKER_CONTENT_TRUST=1
 
 # Setup Docker-In-Docker
-source <(curl -s -S -L "https://raw.githubusercontent.com/jauninb/jumpstart/master/setup_dind.sh")
+source <(curl -s -S -L "https://raw.githubusercontent.com/open-toolchain/commons/master/scripts/setup_dind.sh")
 
 # configure the container registry
 echo "REGISTRY REGION $REGISTRY_REGION"
@@ -47,8 +47,8 @@ ibmcloud cr namespace-add $REGISTRY_NAMESPACE
 fi
 
 export GUN="$REGISTRY_URL/$REGISTRY_NAMESPACE/$IMAGE_NAME"
-source <(curl -s -S -L "https://raw.githubusercontent.com/huayuenh/jumpstart/master/check_signers.sh")
-source <(curl -sSL "https://raw.githubusercontent.com/huayuenh/jumpstart/master/signatures.sh")
+source <(curl -s -S -L "https://raw.githubusercontent.com/open-toolchain/commons/master/scripts/image_signing/check_signers.sh")
+source <(curl -sSL "https://raw.githubusercontent.com/open-toolchain/commons/master/scripts/image_signing/signing_utils.sh")
 if [ $(findTrustData "$GUN") == "false" ]; then
 echo "NO TRUST DATA FOUND"
 # Initialize the repository for Docker Content Trust
@@ -61,7 +61,7 @@ if [ -z "$DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE" ]; then
     export DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE=$(openssl rand -base64 16)
 fi
 echo "Doing Docker Content Trust initialization for GUN $REGISTRY_URL/$REGISTRY_NAMESPACE/$IMAGE_NAME"
-source <(curl -s -S -L "https://raw.githubusercontent.com/jauninb/jumpstart/master/notary_init_gun.sh")
+source <(curl -s -S -L "https://raw.githubusercontent.com/open-toolchain/commons/master/scripts/image_signing/notary_init_gun.sh")
 
 
 echo "Backing-up keys in $VAULT_INSTANCE"
@@ -89,5 +89,5 @@ echo "RUNNING ADD SCRIPT FOR $i";
 DEVOPS_SIGNER=$i
 # Restore root & repository keys
 echo "Restoring keys from $VAULT_INSTANCE"
-source <(curl -sSL "https://raw.githubusercontent.com/huayuenh/jumpstart/master/add_signer.sh")
+source <(curl -sSL "https://raw.githubusercontent.com/open-toolchain/commons/master/scripts/image_signing/add_signer.sh")
 done
