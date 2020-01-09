@@ -18,8 +18,8 @@ echo "********************"
 whoami
 
 echo "execute"
-
-chmod +x /usr/local/bin/notary
+stat /usr/local/bin/notary
+#chmod +x /usr/local/bin/notary
 
 export IBMCLOUD_API_KEY=$IBM_CLOUD_API_KEY
 export DOCKER_CONTENT_TRUST=1
