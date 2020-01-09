@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "TEST IMPORT SCRIPT"
 # Get the notary binary
-#curl -L https://github.com/theupdateframework/notary/releases/download/v0.6.1/notary-Linux-amd64 -o /usr/local/bin/notary
+curl -L https://github.com/theupdateframework/notary/releases/download/v0.6.1/notary-Linux-amd64 -o /usr/local/bin/notary
 # Make it executable
 chmod +x /usr/local/bin/notary
 
