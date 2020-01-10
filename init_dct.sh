@@ -27,6 +27,8 @@ export DOCKER_CONTENT_TRUST=1
 # Setup Docker-In-Docker
 source <(curl -s -S -L "https://raw.githubusercontent.com/open-toolchain/commons/master/scripts/setup_dind.sh")
 
+echo "COMPLETE DIND SETUP"
+
 # configure the container registry
 echo "REGISTRY REGION $REGISTRY_REGION"
 export REGISTRY_REGION=$(echo "$REGISTRY_REGION" | awk -F ':' '{print $NF;}')
