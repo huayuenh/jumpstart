@@ -33,7 +33,7 @@ if [[ "$EXISTING_KEY" == "null" || -z "$EXISTING_KEY" ]]; then
     echo "$JSON_PRIV_DATA"
     echo "$JSON_PUB_DATA"
    
-    echo "Start delete"
+    echo "Start delete 1"
     # delete old keys to allow for update
      if [ "$JSON_PRIV_DATA" ]; then
         echo "IN DELETE"
