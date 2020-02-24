@@ -237,12 +237,17 @@ function base64TextDecode {
 }
 
 function deleteSecret {
+    echo "RUNNING"
     local KEY=$1
     local VAULT_DATA=$2
     local VAULT_NAME=$(getJSONValue "name" "$VAULT_DATA")
     local VAULT_REGION=$(getJSONValue "region" "$VAULT_DATA")
     local VAULT_RESOURCE_GROUP=$(getJSONValue "resourcegroup" "$VAULT_DATA")
-
+    echo "KEY $KEY"
+    echo "VAULT_DATA $VAULT_DATA"
+    echo "VAULT_NAME $VAULT_NAME"
+    echo "VAULT_REGION $VAULT_REGION"
+    echo "VAULT_RESOURCE_GROUP $VAULT_RESOURCE_GROUP"
     if [[ "$VAULT_NAME" && "$VAULT_REGION" && "$VAULT_RESOURCE_GROUP" && "$KEY" ]]; then
         DELETE_SECRET_RESPONSE=$(
             delete_secret \
